@@ -11,27 +11,28 @@ function ShowAllKinkun() {
   useEffect(()=>{ 
     // โค้ดที่จะทำงานเมื่อมี Effect เกิดขึ้นกับ Component
     // ดึงข้อมูลการกินทั้งหมดจาก supabase โดยสร้างเป็นฟังชั่น
-    const fetchKinkuns = async () =>{
-      try { 
-        const {data, error} = await   supabase
-                                      .from('kinkun_tb')
-                                      .select("*")
-                                      .order('created_at', {ascending: false});
+    // fetchkinkun จะเป็นเเค่ตัวกรองข้อมูลที่จะเอาไปใช้
+    const fetchKinkuns = async () =>{ // ถ้าไม่ใช้ async จะใช้  await ไม่ได้
+      try { // ที่ต้องมี data, error เพราะ ต้องเก็บ ข้อมูลที่ได้มาจากsupabase(data) เเละ เก็บข้อผิดพลาดเอาไปเเสดง(error)
+        const {data, error} = await   supabase // await มีไว้หยุดการทำงานชั่วคราว เพื่อที่จะไปเอาข้อมูลมา
+                                      .from('kinkun_tb') // เลือก ตารางจาก โปรเจคไหน
+                                      .select("*") // เอาทุกอย่าง
+                                      .order('created_at', {ascending: false}); // เลียงจากค่าตัวเลขตอนที่ป้อนมากที่สุดไปน้อยสุด
         
         if(error){
           alert('เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาลองใหม่อีกครั้ง');
           console.error('Fetch error:', error);
         }else{
-          setKinkuns(data); 
+          setKinkuns(data); // ทำให้ setkinkuns มีค่าของ data
         }
-      } catch(ex) {
+      } catch(ex) { // มีหน้าที่ตรวจจับข้อผิดพลาดโดยเฉพาะ เเละ ถ้าเกิดข้อผิดพลาดจะไม่ทำให้หน้าจอขาว เเต่เป็นเเจ้งเตือนเเทน
         alert('เกิดข้อผิดพลาด กรถณาลองใหม่อีกครั้ง');
         console.error('Fetch error:', ex); 
       }
     }; 
 
     
-    fetchKinkuns();
+    fetchKinkuns(); // เรียกใช้ข้อมูลที่ผ่านการกรองมาเเล้ว
     
   }, [])
   
@@ -70,20 +71,22 @@ function ShowAllKinkun() {
 
             </thead>
             <tbody>
-              {kinkuns.map((kinkun)=>(
-                <tr key={kinkun.id}>
+              {kinkuns.map((kinkun)=>( // เอาค่าที่อยู่ใน kinkuns ที่วนลูปจนครบทุกตัวเเล้วมาเก็บใน kinkun 
+                <tr key={kinkun.id}> {/*kinkun.id คือ PK ที่เราตั้งไว้ใน supabase เพื่อที่มันจะได้ไม่เเสดงค่าซ้ำกัน*/}
                   <td className="border border-gray-700 p-2 text-center">
                     {
                       kinkun.food_image_url === '' || kinkun.food_image_url === null
-                      ? '_'
+                      ? '_' // ถ้า True (?) หมายความว่า ไม่มีรูปภาพ บันทึกไว้โค้ดจะแสดงผลเป็น '_' (ขีดล่าง) แทน
                       : <img src={kinkun.food_image_url} alt="" className="w-20 mx-auto"/>
+                      // ถ้า False (:): หมายความว่า มี URL รูปภาพอยู่โค้ดจะแสดงผลเป็นรูปภาพที่ใส่ไว้ใน supabase
+                      // ? :  ทำหน้าที่ แทน if(?) else(:) 
                     }
                   </td>
                   <td className="border border-gray-700 p-2">{kinkun.food_name}</td>
                   <td className="border border-gray-700 p-2">{kinkun.food_where}</td>
                   <td className="border border-gray-700 p-2">{kinkun.food_pay}</td>
                   <td className="border border-gray-700 p-2">
-                    {new Date(kinkun.created_at).toLocaleDateString('th-TH')}
+                    {new Date(kinkun.created_at).toLocaleDateString('th-TH')} {/* เอาไว้เปลี่ยนค่าที่เราอยากได้ใน kinkun.created_at (เปลี่ยนเวลาเป็นไทย) */}
                   </td>
                   <td className="border border-gray-700 p-2">
                     เเก้ไข | ลบ
