@@ -11,7 +11,7 @@ function App() {
         <Routes>
           <Route path='/' element={<Home/>}/>
           <Route path='/addkinkun' element={<AddKinkun/>}/>
-          <Route path='/editkinkun' element={<EditKinkun/>}/>
+          <Route path='/editkinkun/:id' element={<EditKinkun/>}/>
           <Route path='/showallkinkun' element={<ShowAllkinkun/>}/>
         </Routes>
       
