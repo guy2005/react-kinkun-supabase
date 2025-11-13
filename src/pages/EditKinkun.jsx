@@ -1,14 +1,12 @@
-
 import React, { useEffect, useState } from "react";
-import food from "./../assets/restaurant.png"
-import Footer from "./../compos/Footer"
+import food from "./../assets/restaurant.png";
+import Footer from "./../compos/Footer";
 import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { supabase } from "./../lib/supabaseClient"
+import { supabase } from "./../lib/supabaseClient";
 
 export default function EditKinkun() {
   const { id } = useParams();
-
 
   const [food_name, setFood_name] = useState("");
   const [food_where, setFood_where] = useState("");
@@ -17,7 +15,7 @@ export default function EditKinkun() {
   const [previewImage, setPreviewImage] = useState("");
   const [food_image_url, setFood_image_url] = useState("");
 
-
+  // โหลดข้อมูลเดิม
   useEffect(() => {
     const fetchKinkun = async () => {
       const { data, error } = await supabase
@@ -46,6 +44,7 @@ export default function EditKinkun() {
     fetchKinkun();
   }, [id]);
 
+  // เลือกรูป + แสดงตัวอย่าง
   const handleSelectImageAndPreview = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -54,6 +53,7 @@ export default function EditKinkun() {
     }
   };
 
+  //Alert
   const warningAlert = (msg) => {
     Swal.fire({
       icon: "warning",
@@ -72,50 +72,51 @@ export default function EditKinkun() {
     });
   };
 
+  // บันทึกการแก้ไข
   const handleSaveUpdateClick = async (e) => {
     e.preventDefault();
 
-    // ✅ Validate input
-    if (food_name.trim() === "") return warningAlert("กรุณากรอกชื่ออาหาร ?");
-    if (food_where.trim() === "") return warningAlert("กรุณากรอกสถานที่ ?");
-    if (food_pay.trim() === "") return warningAlert("กรุณากรอกราคา ?");
+    // Validate
+    if (food_name.trim() === "") return warningAlert("กรุณากรอกชื่ออาหาร");
+    if (food_where.trim() === "") return warningAlert("กรุณากรอกสถานที่");
+    if (food_pay.trim() === "") return warningAlert("กรุณากรอกราคา");
 
-    let imageUrl = food_image_url; // ถ้าไม่เลือกรูปใหม่ ใช้รูปเดิม
+    let imageUrl = food_image_url;
 
-    // ✅ ถ้ามีการเลือกรูปใหม่ ให้อัปโหลด
+    // ถ้ามีอัปโหลดรูปใหม่
     if (foodFile) {
       try {
-        // ลบรูปเก่าออกก่อน (ถ้ามี)
+        // ลบรูปเก่า
         if (food_image_url) {
           const oldImageName = food_image_url.split("/").pop();
-          await supabase.storage.from("kinkun_bk").remove([oldImageName]);
+          await supabase.storage.from("kinkun_tb").remove([oldImageName]);
         }
 
         // อัปโหลดรูปใหม่
-        const newFileName = `${Date.now()}_${foodFile.name}`;
+        const newFileName = Date.now() + "_" + foodFile.name;
+
         const { error: uploadError } = await supabase.storage
-          .from("kinkun_bk")
+          .from("kinkun_tb")
           .upload(newFileName, foodFile);
 
         if (uploadError) {
           console.error(uploadError);
-          return warningAlert("เกิดข้อผิดพลาดในการอัปโหลดรูป");
+          return warningAlert("อัปโหลดรูปไม่สำเร็จ");
         }
 
-        // ดึง public URL
-        const { data: publicUrlData } = supabase
-          .storage
-          .from("kinkun_bk")
+        // get public url
+        const { data: publicUrlData } = await supabase.storage
+          .from("kinkun_tb")
           .getPublicUrl(newFileName);
 
         imageUrl = publicUrlData.publicUrl;
       } catch (err) {
-        console.error("Upload error:", err);
-        return warningAlert("อัปโหลดรูปไม่สำเร็จ");
+        console.error(err);
+        return warningAlert("เกิดข้อผิดพลาดในการอัปโหลดรูป");
       }
     }
 
-    // ✅ อัปเดตข้อมูลในตาราง
+    // update ข้อมูล
     const { error: updateError } = await supabase
       .from("kinkun_tb")
       .update({
@@ -133,6 +134,7 @@ export default function EditKinkun() {
 
     successAlert("แก้ไขข้อมูลสำเร็จแล้ว 🎉");
   };
+
   return (
     <>
       <div className="w-10/12 mx-auto border-gray-300 p-4 shadow-md">
@@ -142,6 +144,7 @@ export default function EditKinkun() {
         <h1 className="text-2xl font-bold text-center text-blue-700">
           แก้ไขข้อมูลการกิน
         </h1>
+
         <img src={food} alt="อาหาร" className="block mx-auto w-30 mt-5" />
 
         <form onSubmit={handleSaveUpdateClick}>
@@ -150,7 +153,7 @@ export default function EditKinkun() {
             <input
               value={food_name}
               onChange={(e) => setFood_name(e.target.value)}
-              placeholder="เช่น Pizza, KFC, ....."
+              placeholder="Pizza, KFC, ..."
               type="text"
               className="border border-gray-400 w-full p-2 mt-2 rounded"
             />
@@ -161,7 +164,7 @@ export default function EditKinkun() {
             <input
               value={food_where}
               onChange={(e) => setFood_where(e.target.value)}
-              placeholder="เช่น Pizza หน้ามอ, KFC หนองแขม, ....."
+              placeholder="เช่น Pizza หน้ามอ"
               type="text"
               className="border border-gray-400 w-full p-2 mt-2 rounded"
             />
@@ -172,8 +175,8 @@ export default function EditKinkun() {
             <input
               value={food_pay}
               onChange={(e) => setFood_pay(e.target.value)}
-              placeholder="เช่น 100, 200, 50, ....."
               type="number"
+              placeholder="เช่น 100, 200, ..."
               className="border border-gray-400 w-full p-2 mt-2 rounded"
             />
           </div>
@@ -187,6 +190,7 @@ export default function EditKinkun() {
               id="selectImage"
               accept="image/*"
             />
+
             <label
               htmlFor="selectImage"
               className="py-2 px-4 bg-blue-500 hover:bg-blue-700 text-white rounded cursor-pointer block w-22"
@@ -212,7 +216,7 @@ export default function EditKinkun() {
         </form>
 
         <div className="text-center my-4">
-          <Link to='/showallkinkun' className="hover:text-blue-700">
+          <Link to="/showallkinkun" className="hover:text-blue-700">
             กลับไปหน้าแสดงข้อมูลการกิน
           </Link>
         </div>

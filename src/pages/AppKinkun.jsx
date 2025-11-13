@@ -14,7 +14,7 @@ export default function AddKinkun() {
   const [foodFlie, setFoodFile] = useState(null);
   const [foodName, setFoodName] = useState("");
 
-  // สร้างฟังก์ชั่นเลือกรูปและแสดงรูป
+  // ฟังก์ชั่นเลือกรูปและแสดงรูป
   const handleSelectImageAndPreview = (e) => {
     const file = e.target.files[0];
 
@@ -24,7 +24,7 @@ export default function AddKinkun() {
     }
   };
 
-  // สร้างฟังก์ชัน warningAlert
+  // ฟังก์ชัน warningAlert
   const warningAlert = (msg) => {
     Swal.fire({
       icon: "warning",
@@ -36,7 +36,7 @@ export default function AddKinkun() {
     });
   };
 
-  // สร้างฟังก์ชั่น successAlert
+  // ฟังก์ชั่น successAlert
   const successAlert = (msg) => {
     Swal.fire({
       icon: "success",
@@ -50,29 +50,25 @@ export default function AddKinkun() {
     });
   };
 
-  // สร้างฟังก์ชันบันทึกข้อมูลและอัปโหลดรูปไปที่ Sapabase
+  // ฟังก์ชันบันทึกข้อมูลและอัปโหลดรูปไปที่ Supabase
   const handleSaveClick = async (e) => {
     e.preventDefault();
 
-    // Valifate UI
+    // Validate UI
     if (food_name.trim().length === 0) {
-      warningAlert("กรุณากรอกชื่ออาหาร ?");
+      return warningAlert("กรุณากรอกชื่ออาหาร ?");
     } else if (food_where.trim().length === 0) {
-      warningAlert("กรุณากรอกว่ากินอาหารที่ไหน ?");
+      return warningAlert("กรุณากรอกว่ากินอาหารที่ไหน ?");
     } else if (food_pay.trim().length === 0) {
-      warningAlert("กรุณากรอกกินไปเท่าไหร่ ?");
+      return warningAlert("กรุณากรอกกินไปเท่าไหร่ ?");
     }
 
-    // อัปโหลดรูปไปที่ table บน Supabase
-    // และ GEt URL ของรูปที่ storage ของ Supabase มาเก็บในตัวแปร
-    let food_image_url = ""; // ตัวแปรเก็บ Url ของณุปที่อัปโหลดไปที่ supabase
+    // Upload รูปไปที่ Supabase storage
+    let food_image_url = "";
 
     if (foodFlie) {
-      //ตรวจสอบก่อนว่าได้เลือกรูปหรือไม่
-      // เปลี่ยนชื่อไฟล์
       const newFileName = Date.now() + "-" + foodFlie.name;
 
-      // ทำการอัปโหลด
       const { error } = await supabase.storage
         .from("kinkun_bk")
         .upload(newFileName, foodFlie);
@@ -81,30 +77,28 @@ export default function AddKinkun() {
         warningAlert("เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่อีกครั้ง");
         return;
       }
-      // กรณีอัปโหลดสำเร็จต้องไป Get URL ของรูปที่ storage ของ Supabase มาเก็บในตัวแปร
-      const { data } = supabase.storage.from("kinkun_bk").getPublicUrl(newFileName);
+
+      const { data } = supabase.storage
+        .from("kinkun_bk")
+        .getPublicUrl(newFileName);
 
       food_image_url = data.publicUrl;
     }
 
-    // บันทึกข้อมูลไปที่ table บน Supabase
+    // Insert ข้อมูลลงตาราง
     const { error } = await supabase.from("kinkun_tb").insert({
-      food_name: food_name,
-      food_where: food_where,
-      food_pay: food_pay,
-      food_image_url: food_image_url
+      food_name,
+      food_where,
+      food_pay,
+      food_image_url
     })
 
     if (error) {
-      warningAlert("เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่อีกครั้ง");
+      warningAlert("เกิดข้อผิดพลาดในการเพิ่มข้อมูล กรุณาลองใหม่อีกครั้ง");
       return;
     }
 
-    successAlert("บันทึกเพิ่มการกินเรียบร้อยแล้ว").then(() => {
-      // Redirect ไปยังหน้า ShowAllKinkin
-      // ไปเขียน redirect ที่ฟังก์ฃัน successAlert 
-      // document.location.href = "/showallkinkun";
-    });
+    successAlert("บันทึกเพิ่มการกินเรียบร้อยแล้ว");
   };
 
   return (
@@ -135,7 +129,7 @@ export default function AddKinkun() {
             <input
               value={food_where}
               onChange={(e) => setFood_where(e.target.value)}
-              placeholder="เช่น Pizza หน้ามอเอเฃีย, KFC หนองแขม, ....."
+              placeholder="เช่น Pizza หน้ามอเอเชีย, KFC หนองแขม, ....."
               type="text"
               className="border border-gray-400 w-full p-2 mt-2 rounded"
             />
